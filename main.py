@@ -1,4 +1,5 @@
 import os
+import base64
 import secrets
 from fastapi import FastAPI, HTTPException, Header, Request
 
@@ -16,28 +17,42 @@ async def oauth_token(request: Request):
 
     form = await request.form()
 
-    client_id = form.get("client_id")
-    client_secret = form.get("client_secret")
     grant_type = form.get("grant_type")
 
-    
+    # Read client credentials from HTTP Basic Auth
+    authorization = request.headers.get("Authorization")
+
+    client_id = None
+    client_secret = None
+
+    if authorization and authorization.startswith("Basic "):
+        encoded = authorization[6:]
+
+        try:
+            decoded = base64.b64decode(encoded).decode("utf-8")
+            client_id, client_secret = decoded.split(":", 1)
+        except Exception:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid client authentication"
+            )
+
+    # Fallback: credentials in request body
+    if not client_id:
+        client_id = form.get("client_id")
+
+    if not client_secret:
+        client_secret = form.get("client_secret")
 
     if grant_type != "client_credentials":
         raise HTTPException(
             status_code=400,
-            detail="Unsupported grant type"
+            detail="Unsupported grant_type"
         )
 
     if (
-        not secrets.compare_digest(
-            str(client_id),
-            str(OAUTH_CLIENT_ID)
-        )
-        or
-        not secrets.compare_digest(
-            str(client_secret),
-            str(OAUTH_CLIENT_SECRET)
-        )
+        client_id != OAUTH_CLIENT_ID
+        or client_secret != OAUTH_CLIENT_SECRET
     ):
         raise HTTPException(
             status_code=401,
