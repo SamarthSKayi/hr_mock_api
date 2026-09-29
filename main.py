@@ -80,7 +80,7 @@ def get_employee(
     employee_id: str,
     authorization: str = Header(None)
     ):
-    if authorization != f"Bearer {API_TOKEN}":
+    if authorization != f"Bearer {ACCESS_TOKEN}":
         raise HTTPException(
             status_code=401,
             detail="Unauthorized"
@@ -119,7 +119,7 @@ def create_employee(
     employee: Employee,
     authorization: str = Header(None)
     ):
-    if authorization != f"Bearer {API_TOKEN}":
+    if authorization != f"Bearer {ACCESS_TOKEN}":
         raise HTTPException(
             status_code=401,
             detail="Unauthorized"
