@@ -20,11 +20,7 @@ async def oauth_token(request: Request):
     client_secret = form.get("client_secret")
     grant_type = form.get("grant_type")
 
-    print("Received client_id:", repr(client_id))
-    print("Expected client_id:", repr(OAUTH_CLIENT_ID))
-    print("Received secret present:", bool(client_secret))
-    print("Expected secret present:", bool(OAUTH_CLIENT_SECRET))
-    print("Grant type:", repr(grant_type))
+    
 
     if grant_type != "client_credentials":
         raise HTTPException(
