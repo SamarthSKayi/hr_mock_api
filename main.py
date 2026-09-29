@@ -1,11 +1,52 @@
 import os
-from fastapi import FastAPI, HTTPException, Header
+import secrets
+from fastapi import FastAPI, HTTPException, Header, Request
 
 
-API_TOKEN = os.getenv("HR_API_TOKEN")
+OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID")
+OAUTH_CLIENT_SECRET = os.getenv("OAUTH_CLIENT_SECRET")
+
+ACCESS_TOKEN = os.getenv("HR_API_TOKEN")
 
 
 app = FastAPI()
+
+@app.post("/oauth/token")
+async def oauth_token(request: Request):
+
+    form = await request.form()
+
+    client_id = form.get("client_id")
+    client_secret = form.get("client_secret")
+    grant_type = form.get("grant_type")
+
+    if grant_type != "client_credentials":
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported grant type"
+        )
+
+    if (
+        not secrets.compare_digest(
+            str(client_id),
+            str(OAUTH_CLIENT_ID)
+        )
+        or
+        not secrets.compare_digest(
+            str(client_secret),
+            str(OAUTH_CLIENT_SECRET)
+        )
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid client credentials"
+        )
+
+    return {
+        "access_token": ACCESS_TOKEN,
+        "token_type": "Bearer",
+        "expires_in": 3600
+    }
 
 
 employees = {
