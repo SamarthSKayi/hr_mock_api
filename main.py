@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException, Header, Request
 OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID")
 OAUTH_CLIENT_SECRET = os.getenv("OAUTH_CLIENT_SECRET")
 
+API_TOKEN = os.getenv("HR_API_TOKEN")
 ACCESS_TOKEN = os.getenv("HR_API_TOKEN")
 
 
@@ -80,7 +81,7 @@ def get_employee(
     employee_id: str,
     authorization: str = Header(None)
     ):
-    if authorization != f"Bearer {ACCESS_TOKEN}":
+    if authorization != f"Bearer {API_TOKEN}":
         raise HTTPException(
             status_code=401,
             detail="Unauthorized"
@@ -119,7 +120,7 @@ def create_employee(
     employee: Employee,
     authorization: str = Header(None)
     ):
-    if authorization != f"Bearer {ACCESS_TOKEN}":
+    if authorization != f"Bearer {API_TOKEN}":
         raise HTTPException(
             status_code=401,
             detail="Unauthorized"
