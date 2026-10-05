@@ -1,71 +1,7 @@
-import os
-import base64
 import secrets
 from fastapi import FastAPI, HTTPException, Header, Request
 
-
-OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID")
-OAUTH_CLIENT_SECRET = os.getenv("OAUTH_CLIENT_SECRET")
-
-API_TOKEN = os.getenv("HR_API_TOKEN")
-ACCESS_TOKEN = os.getenv("HR_API_TOKEN")
-
-
 app = FastAPI()
-
-@app.post("/oauth/token")
-async def oauth_token(request: Request):
-
-    form = await request.form()
-
-    grant_type = form.get("grant_type")
-
-    # Read client credentials from HTTP Basic Auth
-    authorization = request.headers.get("Authorization")
-
-    client_id = None
-    client_secret = None
-
-    if authorization and authorization.startswith("Basic "):
-        encoded = authorization[6:]
-
-        try:
-            decoded = base64.b64decode(encoded).decode("utf-8")
-            client_id, client_secret = decoded.split(":", 1)
-        except Exception:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid client authentication"
-            )
-
-    # Fallback: credentials in request body
-    if not client_id:
-        client_id = form.get("client_id")
-
-    if not client_secret:
-        client_secret = form.get("client_secret")
-
-    if grant_type != "client_credentials":
-        raise HTTPException(
-            status_code=400,
-            detail="Unsupported grant_type"
-        )
-
-    if (
-        client_id != OAUTH_CLIENT_ID
-        or client_secret != OAUTH_CLIENT_SECRET
-    ):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid client credentials"
-        )
-
-    return {
-        "access_token": ACCESS_TOKEN,
-        "token_type": "Bearer",
-        "expires_in": 3600
-    }
-
 
 employees = {
     "EMP1001": {
@@ -76,17 +12,9 @@ employees = {
 }
 
 
-@app.get("/employees/{employee_id}")
-def get_employee(
-    employee_id: str,
-    authorization: str = Header(None)
-    ):
-    if authorization != f"Bearer {API_TOKEN}":
-        raise HTTPException(
-            status_code=401,
-            detail="Unauthorized"
-        )
 
+@app.get("/employees/{employee_id}")
+def get_employee(employee_id: str):
     if employee_id in employees:
         return {
             "exists": True,
@@ -115,16 +43,9 @@ class Employee(BaseModel):
 
 
 
+
 @app.post("/employees", status_code=201)
-def create_employee(
-    employee: Employee,
-    authorization: str = Header(None)
-    ):
-    if authorization != f"Bearer {API_TOKEN}":
-        raise HTTPException(
-            status_code=401,
-            detail="Unauthorized"
-        )
+def create_employee(employee: Employee):
     
     if employee.employeeId in employees:
 
